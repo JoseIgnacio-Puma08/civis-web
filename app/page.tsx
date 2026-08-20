@@ -9,6 +9,23 @@ const EASE = [0.16, 1, 0.3, 1] as const
 export default function Home() {
   const [contacto, setContacto] = useState('')
   const [enviado, setEnviado] = useState(false)
+  const [cargando, setCargando] = useState(false)
+
+  async function enviar() {
+    const valor = contacto.trim()
+    if (!valor || cargando) return
+    setCargando(true)
+    try {
+      await fetch('/api/espera', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contacto: valor }),
+      })
+      setEnviado(true)
+    } finally {
+      setCargando(false)
+    }
+  }
 
   const fade = (d: number) => ({
     initial: { opacity: 0, y: 24 },
@@ -39,7 +56,7 @@ export default function Home() {
           <p className="tracked text-ash mb-3">Pide tu invitación</p>
           <div className="flex border-b border-line focus-within:border-bone transition-colors duration-300">
             <input value={contacto} onChange={(e) => setContacto(e.target.value)} placeholder="tu @instagram o WhatsApp" className="flex-1 bg-transparent py-3 outline-none placeholder:text-ash text-sm" />
-            <button onClick={() => contacto.trim() && setEnviado(true)} className="tracked px-2 hover:text-ash transition-colors">Enviar</button>
+            <button onClick={enviar} disabled={cargando} className="tracked px-2 hover:text-ash transition-colors disabled:opacity-40">{cargando ? 'Enviando' : 'Enviar'}</button>
           </div>
         </motion.div>
       ) : (
