@@ -1,12 +1,19 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { sql } from '@/lib/db'
-import { firmarAcceso, COOKIE } from '@/lib/auth'
+import { firmarAcceso, verificarAcceso, COOKIE } from '@/lib/auth'
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ codigo: string }> }
 ) {
   const { codigo } = await params
+
+  // Si ya tiene acceso, no gastar un uso
+  const yaEntro = await verificarAcceso(req.cookies.get(COOKIE)?.value)
+  if (yaEntro) {
+    return NextResponse.redirect(new URL('/drop', req.url))
+  }
+
   const home = new URL('/', req.url)
 
   const filas = (await sql`

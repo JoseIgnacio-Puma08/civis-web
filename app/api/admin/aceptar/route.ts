@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
   await sql`
     insert into invitaciones (codigo, max_usos, canal, nota)
-    values (${codigo}, 3, 'lista_espera', ${filas[0].contacto})
+    values (${codigo}, 10, 'lista_espera', ${filas[0].contacto})
   `
 
   await sql`update lista_espera set estado = 'aceptado' where id = ${id}`
