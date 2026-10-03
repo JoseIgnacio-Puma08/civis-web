@@ -7,9 +7,6 @@ export async function POST(req: Request) {
   try {
     const jar = await cookies()
     const mid = await verificarAcceso(jar.get(COOKIE)?.value)
-    if (!mid) {
-      return NextResponse.json({ error: 'sin acceso' }, { status: 401 })
-    }
 
     const body = await req.json()
     const varianteId = Number(body.varianteId)
@@ -50,10 +47,11 @@ export async function POST(req: Request) {
 
     const total = Number(precios[0].precio_cent) + envioCent
 
-    const existe = (await sql`
-      select id from miembros where id = ${mid}
-    `) as any[]
-    const miembroId = existe.length > 0 ? mid : null
+    let miembroId: number | null = null
+    if (mid) {
+      const existe = (await sql`select id from miembros where id = ${mid}`) as any[]
+      if (existe.length > 0) miembroId = mid
+    }
 
     const pedidos = (await sql`
       insert into pedidos (drop_id, variante_id, miembro_id, nombre, contacto, ciudad, direccion, envio_cent, total_cent, estado, origen)

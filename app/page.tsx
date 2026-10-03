@@ -1,32 +1,11 @@
 'use client'
 
 import { motion } from 'motion/react'
-import { useState } from 'react'
 
 const L = 'tracked text-ash hover:text-bone transition-colors duration-300'
 const EASE = [0.16, 1, 0.3, 1] as const
 
 export default function Home() {
-  const [contacto, setContacto] = useState('')
-  const [enviado, setEnviado] = useState(false)
-  const [cargando, setCargando] = useState(false)
-
-  async function enviar() {
-    const valor = contacto.trim()
-    if (!valor || cargando) return
-    setCargando(true)
-    try {
-      await fetch('/api/espera', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contacto: valor }),
-      })
-      setEnviado(true)
-    } finally {
-      setCargando(false)
-    }
-  }
-
   const fade = (d: number) => ({
     initial: { opacity: 0, y: 24 },
     animate: { opacity: 1, y: 0 },
@@ -48,22 +27,12 @@ export default function Home() {
       </motion.p>
 
       <motion.p {...fade(1.2)} className="mt-8 text-center text-ash text-sm max-w-sm leading-relaxed">
-        Todavía no tienes acceso. Los drops son de 25 unidades y solo se ven desde adentro.
+        Drops de 25 unidades. Cuando se acaban, se acaban.
       </motion.p>
 
-      {!enviado ? (
-        <motion.div {...fade(1.5)} className="mt-10 w-full max-w-sm">
-          <p className="tracked text-ash mb-3">Pide tu invitación</p>
-          <div className="flex border-b border-line focus-within:border-bone transition-colors duration-300">
-            <input value={contacto} onChange={(e) => setContacto(e.target.value)} placeholder="tu @instagram o WhatsApp" className="flex-1 bg-transparent py-3 outline-none placeholder:text-ash text-sm" />
-            <button onClick={enviar} disabled={cargando} className="tracked px-2 hover:text-ash transition-colors disabled:opacity-40">{cargando ? 'Enviando' : 'Enviar'}</button>
-          </div>
-        </motion.div>
-      ) : (
-        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-10 text-center text-sm max-w-sm">
-          Estás en la lista. Si entras, te llega el enlace por DM.
-        </motion.p>
-      )}
+      <motion.a {...fade(1.5)} href="/drop" className="mt-12 px-16 py-5 bg-bone text-noir tracked">
+        Ver el drop
+      </motion.a>
 
       <motion.div {...fade(1.8)} className="mt-16 flex gap-8">
         <a href="https://instagram.com/civis_brand_" target="_blank" rel="noopener noreferrer" className={L}>Instagram</a>
