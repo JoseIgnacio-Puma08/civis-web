@@ -1,36 +1,73 @@
 'use client'
 
 import { motion } from 'motion/react'
+import { useEffect, useState } from 'react'
+import Votacion, { type Candidato } from '@/components/votacion'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
+function Bloque({ label, delay }: { label: string; delay: number }) {
+  const [txt, setTxt] = useState('??')
+
+  useEffect(() => {
+    let vivo = true
+    const tick = () => {
+      if (!vivo) return
+      const espera = 2200 + Math.random() * 4000
+      setTimeout(() => {
+        if (!vivo) return
+        const d = String(Math.floor(Math.random() * 10))
+        const pos = Math.random() < 0.5
+        setTxt(pos ? d + '?' : '?' + d)
+        setTimeout(() => { if (vivo) setTxt('??') }, 110)
+        tick()
+      }, espera)
+    }
+    tick()
+    return () => { vivo = false }
+  }, [])
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 1.1, delay, ease: EASE }}
+      className="text-center"
+    >
+      <p className="text-5xl md:text-6xl tracking-tight tabular-nums select-none">{txt}</p>
+      <p className="tracked text-ash mt-3">{label}</p>
+    </motion.div>
+  )
+}
+
 export default function Proximamente({
-  numero,
-  teaser,
-  texto,
+  numero, teaser, candidatos, yaVoto, votacionActiva, votacionTitulo, votacionBajada,
 }: {
   numero: string
   teaser: string | null
-  texto?: string
+  desde?: string
+  candidatos: Candidato[]
+  yaVoto: boolean
+  votacionActiva: boolean
+  votacionTitulo: string
+  votacionBajada: string
 }) {
+  const hayVotacion = votacionActiva && candidatos.length > 0
+
   return (
-    <main className="relative min-h-screen overflow-hidden flex flex-col items-center justify-center px-6">
+    <main className="relative min-h-screen overflow-hidden">
       {teaser && (
         <motion.div
           initial={{ opacity: 0, scale: 1.15 }}
-          animate={{ opacity: 0.75, scale: 1 }}
+          animate={{ opacity: 0.6, scale: 1 }}
           transition={{ duration: 2.4, ease: EASE }}
-          className="absolute inset-0"
+          className="fixed inset-0 pointer-events-none"
         >
-          <img
-            src={teaser}
-            alt=""
-            className="w-full h-full object-contain blur-[26px] scale-90 brightness-[1.6]"
-          />
+          <img src={teaser} alt="" className="w-full h-full object-contain blur-[24px] scale-75 brightness-[1.9]" />
         </motion.div>
       )}
 
-      <div className="relative z-10 flex flex-col items-center">
+      <section className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6">
         <motion.div
           initial={{ opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -58,15 +95,18 @@ export default function Proximamente({
           Drop {numero}
         </motion.h1>
 
+        <div className="mt-16 flex items-start gap-8 md:gap-12">
+          <Bloque label="Días" delay={1.15} />
+          <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1.1, delay: 1.25 }} className="text-4xl md:text-5xl text-line leading-[1.1] select-none">:</motion.span>
+          <Bloque label="Horas" delay={1.3} />
+          <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1.1, delay: 1.4 }} className="text-4xl md:text-5xl text-line leading-[1.1] select-none">:</motion.span>
+          <Bloque label="Min" delay={1.45} />
+        </div>
+
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.1, delay: 1.15, ease: EASE }}
-          className="mt-8 text-center text-ash text-sm max-w-xs leading-relaxed"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.1, delay: 1.8 }}
+          className="mt-16 text-center text-ash text-sm max-w-xs leading-relaxed"
         >
-          25 unidades. Ya estás adentro — cuando salga, lo ves aquí primero.
-        </motion.p>
-      </div>
-    </main>
-  )
-}
+          25 unidades. Nadie sabe cuándo — ni nosotros.

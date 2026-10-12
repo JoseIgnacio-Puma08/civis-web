@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers'
 import { sql, getConfig } from '@/lib/db'
 import Proximamente from '@/components/proximamente'
 import DropActivo from '@/components/drop-activo'
@@ -16,11 +17,32 @@ export default async function Drop() {
   const cfg = await getConfig()
 
   if (!drop || drop.estado === 'proximamente') {
+    const candidatos = (await sql`
+      select c.id, c.numero, c.nombre, c.foto_url, count(v.id)::int as votos
+      from candidatos c
+      left join votos v on v.candidato_id = c.id
+      where c.activo = true
+      group by c.id
+      order by c.orden
+    `) as any[]
+
+    const jar = await cookies()
+    const token = jar.get('civis_voto')?.value
+    let yaVoto = false
+    if (token) {
+      const r = (await sql`select id from votos where votante = ${token}`) as any[]
+      yaVoto = r.length > 0
+    }
+
     return (
       <Proximamente
         numero={drop?.numero ?? 'V'}
         teaser={drop?.teaser_url ?? null}
-        texto={cfg.proximamente}
+        candidatos={candidatos}
+        yaVoto={yaVoto}
+        votacionActiva={cfg.votacion_activa === '1'}
+        votacionTitulo={cfg.votacion_titulo ?? 'Un año de Civis'}
+        votacionBajada={cfg.votacion_bajada ?? 'Relanzamos uno. Vota cuál.'}
       />
     )
   }
