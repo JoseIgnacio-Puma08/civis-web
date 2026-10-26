@@ -31,7 +31,7 @@ export default function Home() {
       </motion.p>
 
       <motion.a {...fade(1.5)} href="/drop" className="mt-12 px-16 py-5 bg-bone text-noir tracked">
-        Ver el drop
+        Preventa aniversario
       </motion.a>
 
       <motion.div {...fade(1.8)} className="mt-16 flex gap-8">
