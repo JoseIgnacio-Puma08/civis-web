@@ -13,8 +13,12 @@ on conflict (numero) do nothing;
 insert into variantes (drop_id, talla, stock)
 select d.id, t.talla, 999
 from drops d
-cross join (values ('S'), ('M'), ('L'), ('XL')) as t(talla)
+cross join (values ('S'), ('M'), ('L')) as t(talla)
 where d.numero = 'ANIV'
   and not exists (
     select 1 from variantes v where v.drop_id = d.id and v.talla = t.talla
   );
+
+delete from variantes
+where talla = 'XL'
+  and drop_id = (select id from drops where numero = 'ANIV');

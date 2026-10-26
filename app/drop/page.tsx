@@ -6,7 +6,14 @@ import DropActivo from '@/components/drop-activo'
 
 export const dynamic = 'force-dynamic'
 
-export default async function Drop() {
+export default async function Drop({
+  searchParams,
+}: {
+  searchParams: Promise<{ preview?: string }>
+}) {
+  const { preview } = await searchParams
+  const enPreview = preview === '1' && process.env.NODE_ENV !== 'production'
+
   const cfg = await getConfig()
 
   const anivs = (await sql`
@@ -60,11 +67,12 @@ export default async function Drop() {
         unidades={aniv.unidades}
         confirmadas={conf[0].n}
         envioGratisHasta={Number(cfg.preventa_envio_gratis_hasta ?? 5)}
-        activa={aniv.estado === 'activo'}
+        activa={aniv.estado === 'activo' || enPreview}
         abre={cfg.preventa_abre ?? 'Pronto'}
         cfg={cfg as any}
         dropV={dropVs[0]?.numero ?? null}
         teaserV={dropVs[0]?.teaser_url ?? null}
+        preview={enPreview}
       />
     )
   }
@@ -106,6 +114,10 @@ export default async function Drop() {
         votacionActiva={cfg.votacion_activa === '1'}
         votacionTitulo={cfg.votacion_titulo ?? 'Un ano de Civis'}
         votacionBajada={cfg.votacion_bajada ?? 'Relanzamos uno. Vota cual.'}
+        aviso={(cfg.preventa_aviso ?? '').trim() || null}
+        avisoTitulo={cfg.preventa_titulo ?? 'Edicion Aniversario'}
+        horaGanador={cfg.preventa_hora_ganador ?? '19:00'}
+        horaPreventa={cfg.preventa_hora_abre ?? '20:00'}
       />
     )
   }

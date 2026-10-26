@@ -37,6 +37,7 @@ export default function Aniversario({
   cfg,
   dropV,
   teaserV,
+  preview = false,
 }: {
   titulo: string
   bajada: string
@@ -51,6 +52,7 @@ export default function Aniversario({
   cfg: Cfg
   dropV: string | null
   teaserV: string | null
+  preview?: boolean
 }) {
   const [talla, setTalla] = useState<Variante | null>(null)
   const [nombre, setNombre] = useState('')
@@ -59,6 +61,15 @@ export default function Aniversario({
   const [error, setError] = useState('')
   const [hecho, setHecho] = useState<Hecho | null>(null)
   const [slide, setSlide] = useState(0)
+  const [copiado, setCopiado] = useState(false)
+
+  async function copiarCuenta() {
+    try {
+      await navigator.clipboard.writeText(cfg.cuenta_numero)
+      setCopiado(true)
+      setTimeout(() => setCopiado(false), 2000)
+    } catch {}
+  }
 
   const pista = useRef<HTMLDivElement>(null)
 
@@ -71,6 +82,18 @@ export default function Aniversario({
 
   async function asegurar() {
     if (!listo || cargando || !talla) return
+
+    if (preview) {
+      setHecho({
+        pedidoId: 0,
+        talla: talla.talla,
+        posicion: confirmadas + 1,
+        envioGratis: confirmadas + 1 <= envioGratisHasta,
+        totalCent: precioCent,
+      })
+      return
+    }
+
     setCargando(true)
     setError('')
     try {
@@ -123,14 +146,25 @@ export default function Aniversario({
       'Nombre: ' + nombre.trim(),
       'Telefono: ' + telLimpio,
       'Preventa #' + hecho.posicion + (hecho.envioGratis ? ' · envio gratis' : ''),
+      'Total: $' + (hecho.totalCent / 100).toFixed(2),
       '',
-      'Te envio el comprobante.',
+      'Voy a transferir a:',
+      cfg.banco + ' · ' + cfg.cuenta_tipo,
+      cfg.cuenta_numero,
+      cfg.cuenta_titular,
+      '',
+      'Te envio el comprobante enseguida.',
     ]
     const waUrl =
       'https://wa.me/' + cfg.whatsapp + '?text=' + encodeURIComponent(lineas.join('\n'))
 
     return (
       <main className="min-h-screen px-6 py-20 max-w-md mx-auto">
+        {preview && (
+          <p className="tracked text-ash border border-line px-3 py-2 mb-10 text-center">
+            Vista previa · no se guardo nada
+          </p>
+        )}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -148,18 +182,29 @@ export default function Aniversario({
             <p className="mt-6 tracked">Envio gratis incluido</p>
           )}
 
-          <div className="mt-12 border-t border-line pt-8 space-y-3">
+          <div className="mt-12 border-t border-line pt-8">
             <p className="tracked text-ash">Transferencia</p>
-            <div className="text-sm space-y-1">
-              <p>{cfg.banco}</p>
-              <p>
-                {cfg.cuenta_tipo} · {cfg.cuenta_numero}
-              </p>
-              <p className="text-ash">{cfg.cuenta_titular}</p>
-            </div>
-            <p className="text-2xl pt-4">${(hecho.totalCent / 100).toFixed(2)}</p>
+
+            <button
+              onClick={copiarCuenta}
+              className="w-full mt-5 border border-line hover:border-bone transition-colors duration-300 p-5 text-left"
+            >
+              <span className="tracked text-ash block">
+                {copiado ? 'Copiado' : 'Toca para copiar'}
+              </span>
+              <span className="block text-2xl tabular-nums mt-2">
+                {cfg.cuenta_numero}
+              </span>
+              <span className="block text-ash text-xs mt-2">
+                {cfg.banco} · {cfg.cuenta_tipo} · {cfg.cuenta_titular}
+              </span>
+            </button>
+
+            <p className="text-2xl mt-8">${(hecho.totalCent / 100).toFixed(2)}</p>
             {!hecho.envioGratis && (
-              <p className="text-ash text-xs">Envio se coordina por WhatsApp.</p>
+              <p className="text-ash text-xs mt-2">
+                Envio se coordina por WhatsApp.
+              </p>
             )}
           </div>
 
@@ -182,6 +227,11 @@ export default function Aniversario({
   // ---------- pagina principal ----------
   return (
     <main className="min-h-screen">
+      {preview && (
+        <p className="tracked text-ash text-center border-b border-line py-3">
+          Vista previa
+        </p>
+      )}
       <section className="px-6 pt-24 pb-10 max-w-2xl mx-auto text-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.92 }}
