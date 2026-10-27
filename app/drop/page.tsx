@@ -66,7 +66,11 @@ export default async function Drop({
         precioCent={aniv.precio_cent}
         unidades={aniv.unidades}
         confirmadas={conf[0].n}
-        envioGratisHasta={Number(cfg.preventa_envio_gratis_hasta ?? 5)}
+        ciudadesGratis={String(cfg.preventa_ciudades_gratis ?? 'Quito,Riobamba')
+          .split(',')
+          .map(c => c.trim())
+          .filter(Boolean)}
+        envioCent={Number(cfg.preventa_envio_cent ?? 600)}
         activa={aniv.estado === 'activo' || enPreview}
         abre={cfg.preventa_abre ?? 'Pronto'}
         cfg={cfg as any}

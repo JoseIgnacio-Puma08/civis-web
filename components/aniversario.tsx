@@ -19,8 +19,18 @@ type Hecho = {
   pedidoId: number
   talla: string
   posicion: number
-  envioGratis: boolean
+  ciudad: string
+  envioCent: number
+  precioCent: number
   totalCent: number
+}
+
+function normal(s: string) {
+  return s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .trim()
+    .toLowerCase()
 }
 
 export default function Aniversario({
@@ -31,7 +41,8 @@ export default function Aniversario({
   precioCent,
   unidades,
   confirmadas,
-  envioGratisHasta,
+  ciudadesGratis,
+  envioCent,
   activa,
   abre,
   cfg,
@@ -46,7 +57,8 @@ export default function Aniversario({
   precioCent: number
   unidades: number
   confirmadas: number
-  envioGratisHasta: number
+  ciudadesGratis: string[]
+  envioCent: number
   activa: boolean
   abre: string
   cfg: Cfg
@@ -57,11 +69,14 @@ export default function Aniversario({
   const [talla, setTalla] = useState<Variante | null>(null)
   const [nombre, setNombre] = useState('')
   const [telefono, setTelefono] = useState('')
+  const [ciudad, setCiudad] = useState('')
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState('')
   const [hecho, setHecho] = useState<Hecho | null>(null)
   const [slide, setSlide] = useState(0)
   const [copiado, setCopiado] = useState(false)
+
+  const pista = useRef<HTMLDivElement>(null)
 
   async function copiarCuenta() {
     try {
@@ -71,14 +86,19 @@ export default function Aniversario({
     } catch {}
   }
 
-  const pista = useRef<HTMLDivElement>(null)
-
   const telLimpio = telefono.replace(/\D/g, '')
   const telOk = telLimpio.length >= 9 && telLimpio.length <= 13
   const telMal = telefono.length > 0 && !telOk
-  const listo = !!talla && nombre.trim().length > 2 && telOk
 
+  const gratisNorm = ciudadesGratis.map(c => normal(c))
+  const ciudadOk = ciudad.trim().length >= 3
+  const esGratis = ciudadOk && gratisNorm.includes(normal(ciudad))
+  const envio = ciudadOk ? (esGratis ? 0 : envioCent) : 0
+  const total = precioCent + envio
+
+  const listo = !!talla && nombre.trim().length > 2 && telOk && ciudadOk
   const quedan = Math.max(0, unidades - confirmadas)
+  const listaCiudades = ciudadesGratis.join(' y ')
 
   async function asegurar() {
     if (!listo || cargando || !talla) return
@@ -88,8 +108,10 @@ export default function Aniversario({
         pedidoId: 0,
         talla: talla.talla,
         posicion: confirmadas + 1,
-        envioGratis: confirmadas + 1 <= envioGratisHasta,
-        totalCent: precioCent,
+        ciudad: ciudad.trim(),
+        envioCent: envio,
+        precioCent,
+        totalCent: total,
       })
       return
     }
@@ -104,6 +126,7 @@ export default function Aniversario({
           varianteId: talla.id,
           nombre: nombre.trim(),
           telefono: telLimpio,
+          ciudad: ciudad.trim(),
         }),
       })
       let data: any = null
@@ -138,6 +161,9 @@ export default function Aniversario({
 
   // ---------- pantalla de confirmacion ----------
   if (hecho) {
+    const envioTxt =
+      hecho.envioCent === 0 ? 'Gratis' : '$' + (hecho.envioCent / 100).toFixed(2)
+
     const lineas = [
       'Hola! Quiero asegurar mi camiseta de la ' + titulo + ' de Civis.',
       '',
@@ -145,8 +171,12 @@ export default function Aniversario({
       '',
       'Nombre: ' + nombre.trim(),
       'Telefono: ' + telLimpio,
-      'Preventa #' + hecho.posicion + (hecho.envioGratis ? ' · envio gratis' : ''),
-      'Total: $' + (hecho.totalCent / 100).toFixed(2),
+      'Ciudad: ' + hecho.ciudad,
+      'Preventa #' + hecho.posicion,
+      '',
+      'Camiseta: $' + (hecho.precioCent / 100).toFixed(2),
+      'Envio: ' + envioTxt,
+      '*Total: $' + (hecho.totalCent / 100).toFixed(2) + '*',
       '',
       'Voy a transferir a:',
       cfg.banco + ' · ' + cfg.cuenta_tipo,
@@ -178,16 +208,43 @@ export default function Aniversario({
             Queda reservada 24 horas. Manda el comprobante por WhatsApp y la confirmo.
           </p>
 
-          {hecho.envioGratis && (
-            <p className="mt-6 tracked">Envio gratis incluido</p>
-          )}
+          <div className="mt-10 border-t border-line pt-6 space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-ash">Camiseta</span>
+              <span>${(hecho.precioCent / 100).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-ash">Envio a {hecho.ciudad}</span>
+              <span>{envioTxt}</span>
+            </div>
+            <div className="flex justify-between pt-4 text-lg">
+              <span>Total</span>
+              <span>${(hecho.totalCent / 100).toFixed(2)}</span>
+            </div>
+          </div>
 
-          <div className="mt-12 border-t border-line pt-8">
-            <p className="tracked text-ash">Transferencia</p>
+          <div className="mt-14 border-t border-line pt-10">
+            <p className="tracked text-ash">01 · Avisame por WhatsApp</p>
+            <p className="mt-3 text-ash text-sm leading-relaxed">
+              Mandame el mensaje para que registre tu talla. Ya va escrito.
+            </p>
+            <a
+              href={waUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block text-center mt-6 py-5 bg-bone text-noir tracked"
+            >
+              Abrir WhatsApp
+            </a>
+          </div>
 
+          <div className="mt-14 border-t border-line pt-10">
+            <p className="tracked text-ash">
+              02 · Transfiere ${(hecho.totalCent / 100).toFixed(2)}
+            </p>
             <button
               onClick={copiarCuenta}
-              className="w-full mt-5 border border-line hover:border-bone transition-colors duration-300 p-5 text-left"
+              className="w-full mt-6 border border-line hover:border-bone transition-colors duration-300 p-5 text-left"
             >
               <span className="tracked text-ash block">
                 {copiado ? 'Copiado' : 'Toca para copiar'}
@@ -199,26 +256,18 @@ export default function Aniversario({
                 {cfg.banco} · {cfg.cuenta_tipo} · {cfg.cuenta_titular}
               </span>
             </button>
-
-            <p className="text-2xl mt-8">${(hecho.totalCent / 100).toFixed(2)}</p>
-            {!hecho.envioGratis && (
-              <p className="text-ash text-xs mt-2">
-                Envio se coordina por WhatsApp.
-              </p>
-            )}
+            <p className="mt-4 text-ash text-xs leading-relaxed">
+              Los datos tambien quedan en el chat de WhatsApp.
+            </p>
           </div>
 
-          <a
-            href={waUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block text-center mt-12 py-5 bg-bone text-noir tracked"
-          >
-            Enviar comprobante
-          </a>
-          <p className="mt-6 text-ash text-xs leading-relaxed">
-            El mensaje ya va escrito con tu talla. Solo adjunta el comprobante.
-          </p>
+          <div className="mt-14 border-t border-line pt-10">
+            <p className="tracked text-ash">03 · Mandame el comprobante</p>
+            <p className="mt-3 text-ash text-sm leading-relaxed">
+              Por el mismo chat. Al recibirlo confirmo tu pedido y coordinamos la
+              entrega.
+            </p>
+          </div>
         </motion.div>
       </main>
     )
@@ -319,7 +368,8 @@ export default function Aniversario({
           </p>
           <p className="tracked text-ash mt-2">Disponibles</p>
           <p className="text-ash text-xs mt-6 leading-relaxed">
-            Las primeras {envioGratisHasta} preventas llevan envio gratis a todo el pais.
+            Envio gratis en {listaCiudades}. ${(envioCent / 100).toFixed(2)} al resto
+            del pais.
           </p>
         </motion.div>
 
@@ -391,6 +441,42 @@ export default function Aniversario({
                     Escribe tu numero completo, ej. 0939411416
                   </p>
                 )}
+              </div>
+              <div>
+                <input
+                  value={ciudad}
+                  onChange={e => setCiudad(e.target.value)}
+                  placeholder="Ciudad"
+                  className={campo}
+                />
+                <p className="text-ash text-xs mt-2">
+                  {!ciudadOk
+                    ? 'Escribe tu ciudad para calcular el envio.'
+                    : esGratis
+                    ? 'Envio gratis en ' + ciudad.trim() + '.'
+                    : 'Envio a ' +
+                      ciudad.trim() +
+                      ': $' +
+                      (envioCent / 100).toFixed(2) +
+                      '.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-12 border-t border-line pt-8 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-ash">Camiseta</span>
+                <span>${(precioCent / 100).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-ash">Envio</span>
+                <span>
+                  {!ciudadOk ? '—' : envio === 0 ? 'Gratis' : '$' + (envio / 100).toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between pt-4 text-lg">
+                <span>Total</span>
+                <span>${(total / 100).toFixed(2)}</span>
               </div>
             </div>
 

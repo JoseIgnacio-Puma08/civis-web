@@ -6,11 +6,13 @@ export type Preventa = {
   id: number
   nombre: string
   contacto: string
+  ciudad: string | null
   talla: string | null
   estado: string
   origen: string
+  envio_cent: number
+  total_cent: number
   posicion: number | null
-  envio_gratis: boolean
 }
 
 export default function AdminPreventa({
@@ -108,7 +110,14 @@ export default function AdminPreventa({
                   </p>
                   <p className="text-ash text-xs mt-1">
                     Talla <span className="text-bone">{p.talla ?? '—'}</span>
-                    {p.envio_gratis && <span> · envio gratis</span>}
+                    {' · '}
+                    <span className="text-bone">{p.ciudad ?? 'sin ciudad'}</span>
+                  </p>
+                  <p className="text-ash text-xs mt-1">
+                    ${(p.total_cent / 100).toFixed(2)}
+                    {p.envio_cent === 0
+                      ? ' · envio gratis'
+                      : ' · envio $' + (p.envio_cent / 100).toFixed(2)}
                   </p>
                   <a
                     href={wa}
