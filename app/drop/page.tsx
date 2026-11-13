@@ -4,6 +4,14 @@ import DropActivo from '@/components/drop-activo'
 
 export const dynamic = 'force-dynamic'
 
+// Fotos del Drop V (en /public). Se usan si la tabla fotos esta vacia.
+const FOTOS_DROP_V = [
+  { url: '/drop5-1.webp' },
+  { url: '/drop5-2.webp' },
+  { url: '/drop5-3.webp' },
+  { url: '/drop5-4.webp' },
+]
+
 export default async function Drop() {
   const cfg = await getConfig()
 
@@ -28,9 +36,16 @@ export default async function Drop() {
     )
   }
 
-  const fotos = (await sql`
+  const guardadas = (await sql`
     select url from fotos where drop_id = ${drop.id} order by orden
   `) as any[]
+
+  const fotos =
+    guardadas.length > 0
+      ? guardadas
+      : drop.numero === 'V'
+      ? FOTOS_DROP_V
+      : []
 
   const variantes = (await sql`
     select id, talla, stock from variantes where drop_id = ${drop.id} order by id
