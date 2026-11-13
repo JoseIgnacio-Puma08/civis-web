@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { sql, getConfig } from '@/lib/db'
 import { verificarAcceso, COOKIE } from '@/lib/auth'
+import { ENVIO_CENT } from '@/lib/constantes'
 
 export async function POST(req: Request) {
   try {
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
 
     const envioCent = gratis.includes(ciudad.toLowerCase())
       ? 0
-      : Number(cfg.envio_nacional_cent ?? 700)
+      : ENVIO_CENT
 
     const bajadas = (await sql`
       update variantes set stock = stock - 1

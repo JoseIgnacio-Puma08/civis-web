@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { sql, getConfig } from '@/lib/db'
 import CheckoutForm from '@/components/checkout-form'
+import { ENVIO_CENT } from '@/lib/constantes'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,7 +32,7 @@ export default async function Checkout({
         talla={va.talla}
         precioCent={va.precio_cent}
         ciudadesGratis={(cfg.ciudades_sin_envio ?? '').split(',').map(c => c.trim()).filter(Boolean)}
-        envioNacionalCent={Number(cfg.envio_nacional_cent ?? 700)}
+        envioNacionalCent={ENVIO_CENT}
         cfg={cfg as any}
       />
     </main>

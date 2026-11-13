@@ -1,6 +1,7 @@
 import { sql, getConfig } from '@/lib/db'
 import Proximamente from '@/components/proximamente'
 import DropActivo from '@/components/drop-activo'
+import { LANZAMIENTO_MS, LANZAMIENTO_TEXTO, ENVIO_CENT } from '@/lib/constantes'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,12 +27,32 @@ export default async function Drop() {
   const drop = drops[0]
   const soldOut = (cfg.sold_out_aviso ?? '').trim() || null
 
+  // Activacion automatica: a la hora del lanzamiento el Drop V se abre solo.
+  if (
+    drop &&
+    drop.numero === 'V' &&
+    drop.estado === 'proximamente' &&
+    Date.now() >= LANZAMIENTO_MS
+  ) {
+    await sql`
+      update drops set estado = 'activo'
+      where id = ${drop.id} and estado = 'proximamente'
+    `
+    drop.estado = 'activo'
+  }
+
   if (!drop || drop.estado === 'proximamente') {
     return (
       <Proximamente
         numero={drop?.numero ?? 'V'}
         teaser={drop?.teaser_url ?? null}
         soldOut={soldOut}
+        objetivoMs={!drop || drop.numero === 'V' ? LANZAMIENTO_MS : null}
+        nota={
+          !drop || drop.numero === 'V'
+            ? '25 unidades. ' + LANZAMIENTO_TEXTO + '.'
+            : '25 unidades. Nadie sabe cuando, ni nosotros.'
+        }
       />
     )
   }
@@ -52,7 +73,7 @@ export default async function Drop() {
   `) as any[]
 
   const ciudades = (cfg.ciudades_sin_envio ?? '').split(',').join(' y ')
-  const envio = Number(cfg.envio_nacional_cent ?? 600) / 100
+  const envio = ENVIO_CENT / 100
 
   return (
     <DropActivo
