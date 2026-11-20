@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# cIvIs brAnd — Drop store
 
-## Getting Started
+Production e-commerce site for **Civis Brand**, an independent streetwear label from Quito, Ecuador that sells limited drops of 25 units. Built from scratch and running in production on Vercel: customers browse the current drop, pick a size and check out; the owner runs every drop from an admin panel.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Drop lifecycle:** draft → coming soon (live countdown) → active → sold out, with automatic activation at launch time
+- **Checkout** with per-size stock, shipping cost by city and order tracking (pending → paid)
+- **Admin panel** (JWT-protected) to manage drops, photos, orders, pre-sales and site config without touching code
+- **Community features:** invite codes, waitlist, a public vote to choose an anniversary edition
+- **Smooth, animated UI** with GSAP, Motion and Lenis, mobile-first
+
+## Stack
+
+| Layer | Tech |
+|---|---|
+| Framework | Next.js 16 (App Router, Route Handlers), React 19, TypeScript |
+| Styling | Tailwind CSS 4 |
+| Database | Neon serverless PostgreSQL (`@neondatabase/serverless`, Drizzle ORM) |
+| Validation & auth | Zod · signed HttpOnly cookies with `jose` (HS256 JWT) |
+| Hosting | Vercel |
+
+## Project structure
+
+```
+app/            Pages and API routes (checkout, drop, admin, /api/*)
+components/     UI: active drop, countdown, checkout form, admin modules
+lib/            DB client, auth, admin session, constants
+db/             SQL schema (9 tables) and migration/ops scripts
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Run locally
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+# .env.local → DATABASE_URL=<neon connection string>, AUTH_SECRET=<random string>
+psql "$DATABASE_URL" -f db/schema.sql
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Author
 
-## Learn More
+**José Ignacio Pumagualli** — founder of Civis Brand and the developer of this site · Software Engineering, UDLA · [GitHub](https://github.com/JoseIgnacio-Puma08) · pumaguallipro@gmail.com
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Instagram [@civis_brand_](https://instagram.com/civis_brand_) · TikTok [@civisbrand_](https://tiktok.com/@civisbrand_)
