@@ -13,6 +13,7 @@ export type Pedido = {
   estado: string
   origen: string
   total_cent: number
+  numero?: number
 }
 
 const TALLAS = ['S', 'M', 'L']
@@ -206,7 +207,7 @@ export default function AdminDrop({
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <p className="text-sm">
-                      #{p.id} · {p.nombre}
+                      Pedido #{p.numero ?? p.id} · {p.nombre}
                       {p.origen === 'manual' && <span className="text-ash"> · directa</span>}
                     </p>
                     <p className="text-ash text-xs mt-1">

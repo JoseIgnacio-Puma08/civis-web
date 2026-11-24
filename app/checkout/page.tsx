@@ -15,7 +15,7 @@ export default async function Checkout({
   if (!varianteId) redirect('/drop')
 
   const filas = (await sql`
-    select v.id, v.talla, v.stock, d.precio_cent, d.estado
+    select v.id, v.talla, v.stock, d.precio_cent, d.estado, d.numero, d.nombre
     from variantes v join drops d on d.id = v.drop_id
     where v.id = ${varianteId}
   `) as any[]
@@ -31,6 +31,7 @@ export default async function Checkout({
         varianteId={va.id}
         talla={va.talla}
         precioCent={va.precio_cent}
+        dropTitulo={va.nombre ?? 'Drop ' + va.numero}
         ciudadesGratis={(cfg.ciudades_sin_envio ?? '').split(',').map(c => c.trim()).filter(Boolean)}
         envioNacionalCent={ENVIO_CENT}
         cfg={cfg as any}

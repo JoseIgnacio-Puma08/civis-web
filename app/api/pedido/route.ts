@@ -26,9 +26,7 @@ export async function POST(req: Request) {
       .map(c => c.trim().toLowerCase())
       .filter(Boolean)
 
-    const envioCent = gratis.includes(ciudad.toLowerCase())
-      ? 0
-      : ENVIO_CENT
+    const envioCent = gratis.includes(ciudad.toLowerCase()) ? 0 : ENVIO_CENT
 
     const bajadas = (await sql`
       update variantes set stock = stock - 1
@@ -60,9 +58,18 @@ export async function POST(req: Request) {
       returning id
     `) as any[]
 
+    const pedidoId = pedidos[0].id
+
+    // Numero del pedido DENTRO de este drop: 1, 2, 3... (no el id global)
+    const orden = (await sql`
+      select count(*)::int as n from pedidos
+      where drop_id = ${dropId} and id <= ${pedidoId}
+    `) as any[]
+
     return NextResponse.json({
       ok: true,
-      pedidoId: pedidos[0].id,
+      pedidoId,
+      numero: Number(orden[0]?.n ?? 1),
       talla: bajadas[0].talla,
       envioCent,
       totalCent: total,

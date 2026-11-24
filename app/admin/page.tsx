@@ -33,6 +33,11 @@ export default async function Admin() {
     `) as any[]
   }
 
+  // Numero dentro del drop: el pedido mas antiguo es el #1
+  const porId = [...pedidos].sort((a, b) => a.id - b.id)
+  const orden = new Map(porId.map((p, i) => [p.id, i + 1]))
+  pedidos = pedidos.map(p => ({ ...p, numero: orden.get(p.id) ?? p.id }))
+
   const pendientes = pedidos.filter(p => p.estado === 'pendiente').length
   const pagados = pedidos.filter(p => p.estado === 'pagado').length
   const stock = variantes.reduce((a, v) => a + v.stock, 0)
